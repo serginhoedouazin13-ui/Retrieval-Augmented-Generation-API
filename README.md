@@ -1,5 +1,5 @@
 ![Alt](https://repobeats.axiom.co/api/embed/4c0147b36badffe103e67cdee4420db2d72dbb27.svg "Repobeats analytics image")
-# Retrieval-Augmented-Generation API
+# Retrieval-Augmented-Generation API-Dockerized Deployment
 
 Production-ready Retrieval-Augmented Generation (RAG) API built with FastAPI, ChromaDB and Ollama. The service embeds documents, performs semantic search over those embeddings, retrieves relevant context, and generates grounded answers using a local LLM - including the Docker workflow contributed by the repository maintainer.
 

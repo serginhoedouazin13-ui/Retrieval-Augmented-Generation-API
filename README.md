@@ -1,7 +1,7 @@
 ![Alt](https://repobeats.axiom.co/api/embed/4c0147b36badffe103e67cdee4420db2d72dbb27.svg "Repobeats analytics image")
 # Retrieval-Augmented-Generation API
 
-Production-ready Retrieval-Augmented Generation (RAG) API built with FastAPI, ChromaDB and Ollama. The service embeds documents, performs semantic search over those embeddings, retrieves relevant context, and generates grounded answers using a local LLM.
+Production-ready Retrieval-Augmented Generation (RAG) API built with FastAPI, ChromaDB and Ollama. The service embeds documents, performs semantic search over those embeddings, retrieves relevant context, and generates grounded answers using a local LLM - including the Docker workflow contributed by the repository maintainer.
 
 Badges:  
 [![Python](https://img.shields.io/badge/python-3.12+-blue)]() [![License: MIT](https://img.shields.io/badge/license-MIT-green)]()
@@ -31,6 +31,8 @@ Features
 - Query the indexed documents and get answers grounded in retrieved context
 - Local inference: no cloud LLM required (runs with Ollama)
 - Simple REST API, documented with Swagger UI
+-  Modular backend suitable for production use
+- Dockerfile provided for containerizing the service
 
 Tech stack
 - Python 3.12+
@@ -39,6 +41,8 @@ Tech stack
 - ChromaDB (vector store)
 - Ollama (local LLM runtime)
 - Requests (HTTP client)
+- Docker (engine & CLI)
+- Docker Hub account (if pushing images)
 
 Requirements
 - Python 3.12+
@@ -179,6 +183,104 @@ Contributions are welcome. Suggested workflow:
 2. Create a branch: git checkout -b feat/my-change
 3. Implement and add tests
 4. Open a PR with a clear description
+
+
+
+## Environment variables (PART 2)
+
+Set these in your environment, a `.env` file, or pass them to Docker with `-e` flags:
+
+- `OLLAMA_HOST` (default: `localhost`)
+- `OLLAMA_PORT` (default: `11434`)
+- `OLLAMA_MODEL` (e.g. `llama2` or your local model name)
+- `CHROMA_DB_DIR` (path for ChromaDB persistence, optional)
+- `RAG_API_PORT` (default: `8000`)
+
+Adjust variable names above if the repository uses different config keys.
+
+## Build and run with Docker (local)
+
+1. Build the Docker image locally (replace or keep the tag as needed):
+
+```bash
+docker build -t serginhoedouazin13-ui/rag-api:local .
+```
+
+2. Run the container exposing port 8000 and passing env vars:
+
+```bash
+docker run --rm -p 8000:8000 \
+  -e OLLAMA_HOST=host.docker.internal \
+  -e OLLAMA_PORT=11434 \
+  -e OLLAMA_MODEL=your-model-name \
+  -e CHROMA_DB_DIR=/data/chroma \
+  serginhoedouazin13-ui/rag-api:local
+```
+
+Notes:
+- On macOS/Windows `host.docker.internal` lets the container access services running on the host (like a local Ollama instance). On Linux, configure networking accordingly.
+- If ChromaDB persistence is used, mount a volume: `-v $(pwd)/chroma:/data/chroma`.
+
+## Push to Docker Hub
+
+Tag the image and push to Docker Hub (assumes you're logged in with `docker login`):
+
+```bash
+docker tag serginhoedouazin13-ui/rag-api:local serginhoedouazin13-ui/rag-api:latest
+docker push serginhoedouazin13-ui/rag-api:latest
+```
+
+Pull and run from Docker Hub:
+
+```bash
+docker pull serginhoedouazin13-ui/rag-api:latest
+docker run --rm -p 8000:8000 \
+  -e OLLAMA_HOST=... -e OLLAMA_PORT=... -e OLLAMA_MODEL=... \
+  serginhoedouazin13-ui/rag-api:latest
+```
+
+## API Endpoints
+
+- Swagger / OpenAPI UI: http://localhost:8000/docs
+- Health check (example): http://localhost:8000/health or `/ping` (depends on implementation)
+- RAG query endpoint (example): `POST http://localhost:8000/query`
+
+Example curl to test the query endpoint (adjust JSON body to match the repo's schema):
+
+```bash
+curl -X POST "http://localhost:8000/query" \
+  -H "Content-Type: application/json" \
+  -d '{"question":"What is retrieval augmented generation?","top_k":5}'
+```
+
+## Development (without Docker)
+
+1. Create a virtual environment and install dependencies:
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
+
+2. Start the FastAPI server (example):
+
+```bash
+uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+```
+
+(Adjust `app.main:app` to your actual module path if different.)
+
+## Troubleshooting
+
+- Docker cannot reach Ollama: ensure Ollama is running and reachable. Use `host.docker.internal` on macOS/Windows. On Linux, consider running Ollama in a container on the same network or expose it to the host network.
+- ChromaDB persistence issues: ensure the persistence directory is mounted and writable by the container.
+- Port conflicts: ensure port 8000 is free or change `RAG_API_PORT` and the Docker port mapping.
+
+## Notes from contributor
+
+This repository was extended to include a custom Dockerfile, locally-built images, containerized runtime tests, and a public Docker Hub image pushed for sharing. Examples in this README use the Docker Hub username `serginhoedouazin13-ui`. Update those examples if you publish under a different account.
+
 
 License
 This project is licensed under the MIT License. See LICENSE for details.
